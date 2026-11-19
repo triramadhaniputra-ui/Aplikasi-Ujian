@@ -1,0 +1,250 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-label="Logo SMP Negeri 41 Muaro Jambi">
+  <defs>
+    <!-- Shield outer contour clip path -->
+    <path
+      id="shield-path"
+      d="M 500 44
+         C 452 108, 330 132, 214 114
+         C 178 158, 162 212, 162 276
+         C 162 326, 174 360, 152 396
+         C 118 452, 114 576, 164 686
+         C 214 796, 336 878, 500 948
+         C 664 878, 786 796, 836 686
+         C 886 576, 882 452, 848 396
+         C 826 360, 838 326, 838 276
+         C 838 212, 822 158, 786 114
+         C 670 132, 548 108, 500 44 Z"
+    />
+    <clipPath id="shield-clip">
+      <use href="#shield-path" />
+    </clipPath>
+
+    <!-- Text paths for BERILMU, BERAKHLAK, and SMP N 41 MUARO JAMBI -->
+    <path id="arc-berilmu" d="M 243 649 A 286 286 0 0 1 257 372" />
+    <path id="arc-berakhlak" d="M 743 372 A 286 286 0 0 1 750 663" />
+    <path id="arc-ribbon-text" d="M 180 826 Q 500 710 820 826" />
+
+    <!-- Gradients for open book -->
+    <linearGradient id="gold-page-left" x1="0%" y1="0%" x2="100%" y2="85%">
+      <stop offset="0%" stop-color="#F6E38D" />
+      <stop offset="65%" stop-color="#D7B257" />
+      <stop offset="100%" stop-color="#B18B34" />
+    </linearGradient>
+    <linearGradient id="gold-page-right" x1="100%" y1="0%" x2="0%" y2="85%">
+      <stop offset="0%" stop-color="#F6E38D" />
+      <stop offset="65%" stop-color="#D7B257" />
+      <stop offset="100%" stop-color="#B18B34" />
+    </linearGradient>
+    <linearGradient id="gold-cover" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#DDBB63" />
+      <stop offset="100%" stop-color="#9A7629" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Orange Shield Outline + Clipped Inner Sections -->
+  <g clip-path="url(#shield-clip)">
+    <!-- Yellow lower background -->
+    <rect x="0" y="332" width="1000" height="670" fill="#F9FF38" />
+    <!-- Emerald green top band -->
+    <rect x="0" y="0" width="1000" height="335" fill="#00BA55" />
+  </g>
+
+  <!-- Shield Orange Border -->
+  <use
+    href="#shield-path"
+    fill="none"
+    stroke="#F98E45"
+    stroke-width="24"
+    stroke-linejoin="round"
+  />
+
+  <!-- 5-Pointed Gold Star -->
+  <polygon
+    points="500,104 514,142 554,142 522,165 534,203 500,180 466,203 478,165 446,142 486,142"
+    fill="#FFCA08"
+  />
+
+  <!-- BERTAQWA Text on Green Band -->
+  <text
+    x="500"
+    y="270"
+    text-anchor="middle"
+    fill="#FFFFFF"
+    font-family="'Courier New', 'JetBrains Mono', monospace, sans-serif"
+    font-weight="900"
+    font-size="68"
+    letter-spacing="4"
+  >BERTAQWA</text>
+
+  <!-- Center White Circle -->
+  <circle cx="500" cy="524" r="244" fill="#FFFFFF" />
+
+  <!-- Curved Text BERILMU (Left Yellow Side) -->
+  <text
+    fill="#000000"
+    font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif"
+    font-weight="900"
+    font-size="40"
+    letter-spacing="9"
+  >
+    <textPath href="#arc-berilmu" startOffset="50%" text-anchor="middle">BERILMU</textPath>
+  </text>
+
+  <!-- Curved Text BERAKHLAK (Right Yellow Side) -->
+  <text
+    fill="#000000"
+    font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif"
+    font-weight="900"
+    font-size="38"
+    letter-spacing="4"
+  >
+    <textPath href="#arc-berakhlak" startOffset="50%" text-anchor="middle">BERAKHLAK</textPath>
+  </text>
+
+  <!-- Orange Graduation Cap (Toga) + Tassel -->
+  <g>
+    <path
+      d="M 500 326 Q 542 356 606 370 Q 546 382 500 406 Q 454 382 394 370 Q 458 356 500 326 Z"
+      fill="#FA8A42"
+    />
+    <line x1="586" y1="373" x2="586" y2="424" stroke="#FA8A42" stroke-width="5" stroke-linecap="round" />
+    <path d="M 586 420 L 594 440 Q 586 444 578 440 Z" fill="#FA8A42" />
+  </g>
+
+  <!-- Olive-Green Laurel Leaves (Left & Right) -->
+  <g fill="#8DA650">
+    <!-- Left Branch Leaves -->
+    <path d="M 358 652 C 334 624, 306 584, 294 534 C 284 486, 286 438, 296 392 C 292 442, 294 490, 306 536 C 320 584, 344 620, 366 648 Z" />
+    <path d="M 294 416 C 286 404, 284 386, 290 368 C 296 386, 298 402, 294 416 Z" />
+    <path d="M 294 446 C 280 426, 276 402, 282 380 C 292 400, 296 424, 294 446 Z" />
+    <path d="M 298 480 C 278 456, 272 428, 278 402 C 292 424, 298 452, 298 480 Z" />
+    <path d="M 304 514 C 280 488, 274 456, 280 430 C 296 454, 304 484, 304 514 Z" />
+    <path d="M 314 548 C 286 522, 278 490, 284 462 C 304 486, 314 518, 314 548 Z" />
+    <path d="M 326 582 C 296 558, 286 526, 292 496 C 314 522, 326 552, 326 582 Z" />
+    <path d="M 342 612 C 308 592, 296 562, 304 532 C 326 556, 340 584, 342 612 Z" />
+    <path d="M 360 640 C 324 624, 310 598, 318 568 C 342 588, 356 614, 360 640 Z" />
+    <path d="M 380 662 C 344 654, 328 632, 336 604 C 360 620, 374 642, 380 662 Z" />
+    <!-- Inner small leaves left -->
+    <path d="M 306 490 C 316 462, 324 438, 318 416 C 306 436, 302 464, 306 490 Z" />
+    <path d="M 318 532 C 330 502, 338 476, 332 452 C 318 474, 314 504, 318 532 Z" />
+    <path d="M 334 574 C 350 544, 356 516, 348 492 C 332 516, 328 546, 334 574 Z" />
+    <path d="M 354 612 C 372 582, 378 554, 368 532 C 352 554, 348 584, 354 612 Z" />
+    <path d="M 378 644 C 398 618, 404 592, 394 572 C 376 592, 372 620, 378 644 Z" />
+
+    <!-- Right Branch Leaves (Mirrored around x=500) -->
+    <g transform="translate(1000, 0) scale(-1, 1)">
+      <path d="M 358 652 C 334 624, 306 584, 294 534 C 284 486, 286 438, 296 392 C 292 442, 294 490, 306 536 C 320 584, 344 620, 366 648 Z" />
+      <path d="M 294 416 C 286 404, 284 386, 290 368 C 296 386, 298 402, 294 416 Z" />
+      <path d="M 294 446 C 280 426, 276 402, 282 380 C 292 400, 296 424, 294 446 Z" />
+      <path d="M 298 480 C 278 456, 272 428, 278 402 C 292 424, 298 452, 298 480 Z" />
+      <path d="M 304 514 C 280 488, 274 456, 280 430 C 296 454, 304 484, 304 514 Z" />
+      <path d="M 314 548 C 286 522, 278 490, 284 462 C 304 486, 314 518, 314 548 Z" />
+      <path d="M 326 582 C 296 558, 286 526, 292 496 C 314 522, 326 552, 326 582 Z" />
+      <path d="M 342 612 C 308 592, 296 562, 304 532 C 326 556, 340 584, 342 612 Z" />
+      <path d="M 360 640 C 324 624, 310 598, 318 568 C 342 588, 356 614, 360 640 Z" />
+      <path d="M 380 662 C 344 654, 328 632, 336 604 C 360 620, 374 642, 380 662 Z" />
+      <path d="M 306 490 C 316 462, 324 438, 318 416 C 306 436, 302 464, 306 490 Z" />
+      <path d="M 318 532 C 330 502, 338 476, 332 452 C 318 474, 314 504, 318 532 Z" />
+      <path d="M 334 574 C 350 544, 356 516, 348 492 C 332 516, 328 546, 334 574 Z" />
+      <path d="M 354 612 C 372 582, 378 554, 368 532 C 352 554, 348 584, 354 612 Z" />
+      <path d="M 378 644 C 398 618, 404 592, 394 572 C 376 592, 372 620, 378 644 Z" />
+    </g>
+  </g>
+
+  <!-- Golden Open Book -->
+  <g>
+    <!-- Outer cover/pages cradle -->
+    <path
+      d="M 424 468
+         L 382 478
+         L 372 616
+         Q 436 620 500 658
+         Q 564 620 628 616
+         L 618 478
+         L 576 468
+         L 580 598
+         Q 540 598 500 634
+         Q 460 598 420 598
+         Z"
+      fill="url(#gold-cover)"
+    />
+    <!-- Left inner page -->
+    <path
+      d="M 432 444
+         Q 468 450 496 472
+         L 496 626
+         Q 464 598 432 590
+         Z"
+      fill="url(#gold-page-left)"
+    />
+    <!-- Right inner page -->
+    <path
+      d="M 568 444
+         Q 532 450 504 472
+         L 504 626
+         Q 536 598 568 590
+         Z"
+      fill="url(#gold-page-right)"
+    />
+    <!-- Small bottom spine accent -->
+    <circle cx="500" cy="656" r="10" fill="#D4B055" />
+  </g>
+
+  <!-- Navy Ribbon Banner with Orange Outline -->
+  <g stroke="#F98E45" stroke-width="6" stroke-linejoin="round">
+    <!-- Left Ribbon Tail -->
+    <path
+      d="M 222 818
+         L 140 806
+         L 68 892
+         L 164 892
+         L 152 952
+         L 252 882
+         C 272 868, 272 844, 248 836
+         Z"
+      fill="#011B45"
+    />
+    <!-- Right Ribbon Tail -->
+    <path
+      d="M 778 818
+         L 860 806
+         L 932 892
+         L 836 892
+         L 848 952
+         L 748 882
+         C 728 868, 728 844, 752 836
+         Z"
+      fill="#011B45"
+    />
+    <!-- Left Fold Underlap -->
+    <path
+      d="M 152 856 C 174 878, 240 874, 258 846 L 236 822 Z"
+      fill="#001233"
+    />
+    <!-- Right Fold Underlap -->
+    <path
+      d="M 848 856 C 826 878, 760 874, 742 846 L 764 822 Z"
+      fill="#001233"
+    />
+    <!-- Main Front Ribbon Banner -->
+    <path
+      d="M 134 780
+         Q 500 638 866 780
+         L 844 868
+         Q 500 732 156 868
+         Z"
+      fill="#011B45"
+    />
+  </g>
+
+  <!-- Curved Text SMP N 41 MUARO JAMBI on Ribbon -->
+  <text
+    fill="#FFFFFF"
+    font-family="'Courier New', 'JetBrains Mono', monospace, sans-serif"
+    font-weight="900"
+    font-size="45"
+    letter-spacing="1.5"
+  >
+    <textPath href="#arc-ribbon-text" startOffset="50%" text-anchor="middle">SMP N 41 MUARO JAMBI</textPath>
+  </text>
+</svg>

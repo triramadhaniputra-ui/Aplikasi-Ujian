@@ -1,0 +1,10 @@
+{
+  "name": "CBT SMP Negeri 41 Muaro Jambi",
+  "description": "Platform ujian digital berbasis Computer Based Test (CBT) untuk SMP Negeri 41 Muaro Jambi dengan bank soal lengkap, penilaian otomatis, analisis butir soal, dan sistem monitoring anti-kecurangan real-time.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,443 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // =======================
+    // GLOBAL PRIMITIVES
+    // =======================
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isBootstrappedAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email == 'triramadhaniputra@gmail.com' &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // =======================
+    // VALIDATION BLUEPRINTS
+    // =======================
+    function isValidSchoolSettings(data) {
+      return data.keys().hasAll([
+        'schoolName', 'schoolLogo', 'academicYear', 'semester',
+        'defaultKkm', 'defaultDuration', 'autoLogoutMinutes',
+        'requireWebcam', 'maxViolations', 'tabSwitchDetection',
+        'allowTokenAutoRotate', 'notificationsEnabled',
+        'updatedByUid', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'schoolName', 'schoolLogo', 'academicYear', 'semester',
+        'defaultKkm', 'defaultDuration', 'autoLogoutMinutes',
+        'requireWebcam', 'maxViolations', 'tabSwitchDetection',
+        'allowTokenAutoRotate', 'notificationsEnabled',
+        'updatedByUid', 'createdAt', 'updatedAt'
+      ]) &&
+      data.schoolName is string && data.schoolName.size() >= 3 && data.schoolName.size() <= 150 &&
+      data.schoolLogo is string && data.schoolLogo.size() >= 1 && data.schoolLogo.size() <= 500 &&
+      data.academicYear is string && data.academicYear.size() == 9 && data.academicYear.matches('^[0-9]{4}/[0-9]{4}$') &&
+      data.semester in ['Ganjil', 'Genap'] &&
+      data.defaultKkm is number && data.defaultKkm >= 0 && data.defaultKkm <= 100 &&
+      data.defaultDuration is number && data.defaultDuration >= 5 && data.defaultDuration <= 300 &&
+      data.autoLogoutMinutes is number && data.autoLogoutMinutes >= 5 && data.autoLogoutMinutes <= 480 &&
+      data.requireWebcam is bool &&
+      data.maxViolations is number && data.maxViolations >= 1 && data.maxViolations <= 20 &&
+      data.tabSwitchDetection is bool &&
+      data.allowTokenAutoRotate is bool &&
+      data.notificationsEnabled is bool &&
+      isValidId(data.updatedByUid) &&
+      data.updatedByUid == request.auth.uid &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidUserPublic(data, userId) {
+      return data.keys().hasAll(['uid', 'displayName', 'role', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'displayName', 'role', 'status', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) && data.uid == userId &&
+        data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 120 &&
+        data.role in ['admin', 'guru', 'pengawas', 'siswa'] &&
+        data.status in ['aktif', 'nonaktif'] &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidUserPrivate(data, userId) {
+      return data.keys().hasAll(['uid', 'email', 'nipNis', 'className', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'nipNis', 'className', 'createdAt', 'updatedAt']) &&
+        isValidId(data.uid) && data.uid == userId &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+        data.nipNis is string && data.nipNis.size() <= 40 &&
+        data.className is string && data.className.size() <= 40 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAdminGrant(data, userId) {
+      return data.keys().hasAll(['uid', 'grantedByUid', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'grantedByUid', 'createdAt']) &&
+        isValidId(data.uid) && data.uid == userId &&
+        isValidId(data.grantedByUid) && data.grantedByUid == request.auth.uid &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSubject(data) {
+      return data.keys().hasAll(['ownerUid', 'code', 'name', 'kkm', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerUid', 'code', 'name', 'kkm', 'createdAt', 'updatedAt']) &&
+        isValidId(data.ownerUid) &&
+        data.code is string && data.code.size() >= 2 && data.code.size() <= 20 && data.code.matches('^[A-Z0-9_\\-]+$') &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+        data.kkm is number && data.kkm >= 0 && data.kkm <= 100 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidClassGroup(data) {
+      return data.keys().hasAll(['ownerUid', 'name', 'gradeLevel', 'studentCount', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['ownerUid', 'name', 'gradeLevel', 'studentCount', 'createdAt', 'updatedAt']) &&
+        isValidId(data.ownerUid) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 40 &&
+        data.gradeLevel is number && data.gradeLevel >= 1 && data.gradeLevel <= 12 &&
+        data.studentCount is number && data.studentCount >= 0 && data.studentCount <= 500 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidExam(data) {
+      return data.keys().hasAll([
+        'ownerUid', 'title', 'subjectCode', 'subjectName',
+        'examDate', 'durationMinutes', 'questionCount', 'kkm',
+        'status', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerUid', 'title', 'subjectCode', 'subjectName',
+        'examDate', 'durationMinutes', 'questionCount', 'kkm',
+        'status', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.ownerUid) &&
+      data.title is string && data.title.size() >= 3 && data.title.size() <= 160 &&
+      data.subjectCode is string && data.subjectCode.size() >= 2 && data.subjectCode.size() <= 20 && data.subjectCode.matches('^[A-Z0-9_\\-]+$') &&
+      data.subjectName is string && data.subjectName.size() >= 2 && data.subjectName.size() <= 100 &&
+      data.examDate is string && data.examDate.size() == 10 && data.examDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+      data.durationMinutes is number && data.durationMinutes >= 5 && data.durationMinutes <= 300 &&
+      data.questionCount is number && data.questionCount >= 1 && data.questionCount <= 500 &&
+      data.kkm is number && data.kkm >= 0 && data.kkm <= 100 &&
+      data.status in ['draft', 'aktif', 'selesai'] &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidCbtSnapshot(data) {
+      return data.keys().hasAll([
+        'ownerUid', 'schoolName', 'academicYear', 'semester',
+        'totalSubjects', 'totalClasses', 'totalQuestions',
+        'totalExams', 'totalStudents', 'totalTeachers',
+        'syncedByName', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerUid', 'schoolName', 'academicYear', 'semester',
+        'totalSubjects', 'totalClasses', 'totalQuestions',
+        'totalExams', 'totalStudents', 'totalTeachers',
+        'syncedByName', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.ownerUid) &&
+      data.schoolName is string && data.schoolName.size() >= 3 && data.schoolName.size() <= 150 &&
+      data.academicYear is string && data.academicYear.size() == 9 && data.academicYear.matches('^[0-9]{4}/[0-9]{4}$') &&
+      data.semester in ['Ganjil', 'Genap'] &&
+      data.totalSubjects is number && data.totalSubjects >= 0 &&
+      data.totalClasses is number && data.totalClasses >= 0 &&
+      data.totalQuestions is number && data.totalQuestions >= 0 &&
+      data.totalExams is number && data.totalExams >= 0 &&
+      data.totalStudents is number && data.totalStudents >= 0 &&
+      data.totalTeachers is number && data.totalTeachers >= 0 &&
+      data.syncedByName is string && data.syncedByName.size() >= 2 && data.syncedByName.size() <= 120 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidFullStoreChunk(data) {
+      return data.keys().hasAll([
+        'ownerUid', 'tableName', 'chunkIndex', 'totalChunks',
+        'recordCount', 'records', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerUid', 'tableName', 'chunkIndex', 'totalChunks',
+        'recordCount', 'records', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.ownerUid) &&
+      data.tableName in [
+        'system_settings', 'classes', 'subjects', 'users', 'questions',
+        'exams', 'exam_questions', 'exam_attempts', 'student_answers', 'violation_logs'
+      ] &&
+      data.chunkIndex is number && data.chunkIndex >= 0 && data.chunkIndex <= 500 &&
+      data.totalChunks is number && data.totalChunks >= 1 && data.totalChunks <= 500 &&
+      data.recordCount is number && data.recordCount >= 0 && data.recordCount <= 50 &&
+      data.records is list && data.records.size() <= 50 &&
+      (data.records.size() == 0 || data.records[0] is map) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidStoreMeta(data) {
+      return data.keys().hasAll([
+        'ownerUid', 'storageMode', 'autoSync', 'totalRecords',
+        'totalChunks', 'chunkIds', 'syncedByName', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'ownerUid', 'storageMode', 'autoSync', 'totalRecords',
+        'totalChunks', 'chunkIds', 'syncedByName', 'createdAt', 'updatedAt'
+      ]) &&
+      isValidId(data.ownerUid) &&
+      data.storageMode in ['full_cloud', 'hybrid'] &&
+      data.autoSync is bool &&
+      data.totalRecords is number && data.totalRecords >= 0 &&
+      data.totalChunks is number && data.totalChunks >= 0 && data.totalChunks <= 200 &&
+      data.chunkIds is list && data.chunkIds.size() <= 200 &&
+      (data.chunkIds.size() == 0 || data.chunkIds[0] is string) &&
+      data.syncedByName is string && data.syncedByName.size() >= 2 && data.syncedByName.size() <= 120 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // =======================
+    // COLLECTION RULES
+    // =======================
+
+    // 1. School Settings
+    match /school_settings/{settingId} {
+      allow get: if isSignedIn() && isValidId(settingId);
+      allow list: if isBootstrappedAdmin();
+      allow create: if isAdmin() && isValidId(settingId) && isValidSchoolSettings(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(settingId) && isValidSchoolSettings(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'schoolName', 'schoolLogo', 'academicYear', 'semester',
+          'defaultKkm', 'defaultDuration', 'autoLogoutMinutes',
+          'requireWebcam', 'maxViolations', 'tabSwitchDetection',
+          'allowTokenAutoRotate', 'notificationsEnabled',
+          'updatedByUid', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(settingId);
+    }
+
+    // 2. Users Public Profile & PII Subcollection
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isSignedIn() && isValidId(userId) && isValidUserPublic(incoming(), userId) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (isOwner(userId) && incoming().role == 'siswa' && incoming().status == 'aktif')
+        );
+      allow update: if isSignedIn() && isValidId(userId) && isValidUserPublic(incoming(), userId) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isAdmin() &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'role', 'status', 'updatedAt'])
+          ) ||
+          (
+            isOwner(userId) &&
+            incoming().role == existing().role &&
+            incoming().status == existing().status &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt'])
+          )
+        );
+      allow delete: if isAdmin() && isValidId(userId);
+
+      match /private/{docId} {
+        allow get: if isValidId(userId) && isValidId(docId) && (isOwner(userId) || isAdmin());
+        allow list: if isOwner(userId) || isBootstrappedAdmin();
+        allow create: if isSignedIn() && isValidId(userId) && isValidId(docId) &&
+          (isOwner(userId) || isAdmin()) &&
+          isValidUserPrivate(incoming(), userId) &&
+          incoming().createdAt == request.time &&
+          incoming().updatedAt == request.time;
+        allow update: if isSignedIn() && isValidId(userId) && isValidId(docId) &&
+          isValidUserPrivate(incoming(), userId) &&
+          incoming().uid == existing().uid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          (
+            (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['email', 'nipNis', 'className', 'updatedAt'])) ||
+            (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['nipNis', 'className', 'updatedAt']) && incoming().email == existing().email)
+          );
+        allow delete: if isAdmin() && isValidId(userId) && isValidId(docId);
+      }
+    }
+
+    // 3. Admins Registry
+    match /admins/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isBootstrappedAdmin();
+      allow create: if isAdmin() && isValidId(userId) && isValidAdminGrant(incoming(), userId) &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(userId);
+    }
+
+    // 4. Subjects
+    match /subjects/{subjectId} {
+      allow get: if isValidId(subjectId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isSignedIn() && isValidId(subjectId) && isValidSubject(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(subjectId) && isValidSubject(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (isAdmin() || existing().ownerUid == request.auth.uid) &&
+        (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['code', 'name', 'kkm', 'updatedAt'])
+        );
+      allow delete: if isValidId(subjectId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+    }
+
+    // 5. Classes
+    match /classes/{classId} {
+      allow get: if isValidId(classId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isSignedIn() && isValidId(classId) && isValidClassGroup(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(classId) && isValidClassGroup(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (isAdmin() || existing().ownerUid == request.auth.uid) &&
+        (
+          isAdmin() ||
+          incoming().diff(existing()).affectedKeys().hasOnly(['name', 'gradeLevel', 'studentCount', 'updatedAt'])
+        );
+      allow delete: if isValidId(classId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+    }
+
+    // 6. Exams (with Terminal State Lock on status == 'selesai')
+    match /exams/{examId} {
+      allow get: if isValidId(examId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isSignedIn() && isValidId(examId) && isValidExam(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(examId) && isValidExam(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().status != 'selesai' || isAdmin()) &&
+        (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'title', 'subjectCode', 'subjectName', 'examDate',
+                'durationMinutes', 'questionCount', 'kkm', 'updatedAt'
+              ]) ||
+              incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])
+            )
+          )
+        );
+      allow delete: if isValidId(examId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+    }
+
+    // 7. CBT Cloud Sync Snapshots
+    match /cbt_snapshots/{snapshotId} {
+      allow get: if isValidId(snapshotId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+      allow list: if isSignedIn() && (existing().ownerUid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isSignedIn() && isValidId(snapshotId) && isValidCbtSnapshot(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isSignedIn() && isValidId(snapshotId) && isValidCbtSnapshot(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'schoolName', 'academicYear', 'semester',
+              'totalSubjects', 'totalClasses', 'totalQuestions',
+              'totalExams', 'totalStudents', 'totalTeachers',
+              'syncedByName', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(snapshotId) && (isAdmin() || (isSignedIn() && existing().ownerUid == request.auth.uid));
+    }
+
+    // 8. Full Storage Chunks (Strictly Admin Only - contains full school CBT database)
+    match /cbt_full_store/{chunkId} {
+      allow get: if isValidId(chunkId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isAdmin() && isValidId(chunkId) && isValidFullStoreChunk(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(chunkId) && isValidFullStoreChunk(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().tableName == existing().tableName &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'chunkIndex', 'totalChunks', 'recordCount', 'records', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(chunkId);
+    }
+
+    // 9. Full Storage Metadata (Strictly Admin Only)
+    match /cbt_store_meta/{metaId} {
+      allow get: if isValidId(metaId) && isAdmin();
+      allow list: if isBootstrappedAdmin();
+      allow create: if isAdmin() && isValidId(metaId) && isValidStoreMeta(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isAdmin() && isValidId(metaId) && isValidStoreMeta(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'storageMode', 'autoSync', 'totalRecords', 'totalChunks',
+          'chunkIds', 'syncedByName', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(metaId);
+    }
+  }
+}

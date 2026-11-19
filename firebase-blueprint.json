@@ -1,0 +1,631 @@
+{
+  "entities": {
+    "SchoolSettings": {
+      "title": "SchoolSettings",
+      "description": "Identitas sekolah dan konfigurasi utama ujian SMART CBT yang tersinkronisasi ke Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "schoolName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 150,
+          "description": "Nama resmi satuan pendidikan"
+        },
+        "schoolLogo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Path atau URL logo sekolah"
+        },
+        "academicYear": {
+          "type": "string",
+          "pattern": "^[0-9]{4}/[0-9]{4}$",
+          "minLength": 9,
+          "maxLength": 9,
+          "description": "Tahun pelajaran format YYYY/YYYY"
+        },
+        "semester": {
+          "type": "string",
+          "enum": ["Ganjil", "Genap"],
+          "description": "Semester berjalan"
+        },
+        "defaultKkm": {
+          "type": "number",
+          "description": "Kriteria Ketuntasan Minimal standar"
+        },
+        "defaultDuration": {
+          "type": "number",
+          "description": "Durasi ujian default dalam menit"
+        },
+        "autoLogoutMinutes": {
+          "type": "number",
+          "description": "Batas idle sebelum logout otomatis dalam menit"
+        },
+        "requireWebcam": {
+          "type": "boolean",
+          "description": "Wajib verifikasi kamera sebelum ujian"
+        },
+        "maxViolations": {
+          "type": "number",
+          "description": "Batas maksimal pelanggaran ujian"
+        },
+        "tabSwitchDetection": {
+          "type": "boolean",
+          "description": "Deteksi perpindahan tab/jendela"
+        },
+        "allowTokenAutoRotate": {
+          "type": "boolean",
+          "description": "Rotasi token otomatis"
+        },
+        "notificationsEnabled": {
+          "type": "boolean",
+          "description": "Notifikasi real-time aktif"
+        },
+        "updatedByUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID admin yang terakhir memperbarui pengaturan"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan dokumen"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan terakhir dokumen"
+        }
+      },
+      "required": [
+        "schoolName",
+        "schoolLogo",
+        "academicYear",
+        "semester",
+        "defaultKkm",
+        "defaultDuration",
+        "autoLogoutMinutes",
+        "requireWebcam",
+        "maxViolations",
+        "tabSwitchDetection",
+        "allowTokenAutoRotate",
+        "notificationsEnabled",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserPublic": {
+      "title": "UserPublic",
+      "description": "Profil publik non-PII pengguna terautentikasi Firebase pada sistem SMART CBT.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID pemilik dokumen"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Nama tampilan pengguna"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "guru", "pengawas", "siswa"],
+          "description": "Peran akses CBT pengguna"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["aktif", "nonaktif"],
+          "description": "Status keaktifan akun"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pendaftaran profil"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan profil"
+        }
+      },
+      "required": ["uid", "displayName", "role", "status", "createdAt", "updatedAt"]
+    },
+    "UserPrivate": {
+      "title": "UserPrivate",
+      "description": "Data PII terisolasi milik pengguna (email, NIP/NIS, kelas) yang hanya dapat diakses pemilik atau admin.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "Firebase Auth UID pemilik"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Alamat email Google terverifikasi"
+        },
+        "nipNis": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "description": "NIP atau NIS pengguna"
+        },
+        "className": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 40,
+          "description": "Nama kelas untuk siswa"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan data privat"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan data privat"
+        }
+      },
+      "required": ["uid", "email", "nipNis", "className", "createdAt", "updatedAt"]
+    },
+    "AdminGrant": {
+      "title": "AdminGrant",
+      "description": "Daftar UID administrator terverifikasi yang memiliki hak kelola sistem CBT.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID admin"
+        },
+        "grantedByUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID admin pemberi izin"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pemberian hak admin"
+        }
+      },
+      "required": ["uid", "grantedByUid", "createdAt"]
+    },
+    "SubjectDoc": {
+      "title": "SubjectDoc",
+      "description": "Data mata pelajaran SMP Negeri 41 Muaro Jambi di Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID pembuat atau pengelola dokumen"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_\\-]+$",
+          "minLength": 2,
+          "maxLength": 20,
+          "description": "Kode mata pelajaran"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Nama mata pelajaran"
+        },
+        "kkm": {
+          "type": "number",
+          "description": "KKM mata pelajaran"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu sinkronisasi awal"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan terakhir"
+        }
+      },
+      "required": ["ownerUid", "code", "name", "kkm", "createdAt", "updatedAt"]
+    },
+    "ClassGroupDoc": {
+      "title": "ClassGroupDoc",
+      "description": "Data rombongan belajar / kelas di Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID pembuat atau pengelola dokumen"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40,
+          "description": "Nama kelas (misal VII-A, IX-B)"
+        },
+        "gradeLevel": {
+          "type": "number",
+          "description": "Tingkat kelas (7, 8, atau 9)"
+        },
+        "studentCount": {
+          "type": "number",
+          "description": "Jumlah siswa aktif dalam kelas"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu sinkronisasi awal"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan terakhir"
+        }
+      },
+      "required": ["ownerUid", "name", "gradeLevel", "studentCount", "createdAt", "updatedAt"]
+    },
+    "ExamDoc": {
+      "title": "ExamDoc",
+      "description": "Jadwal dan metadata sesi ujian SMART CBT di Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID pengelola ujian"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "Judul paket ujian"
+        },
+        "subjectCode": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_\\-]+$",
+          "minLength": 2,
+          "maxLength": 20,
+          "description": "Kode mata pelajaran"
+        },
+        "subjectName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Nama mata pelajaran"
+        },
+        "examDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "minLength": 10,
+          "maxLength": 10,
+          "description": "Tanggal ujian YYYY-MM-DD"
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Durasi ujian dalam menit"
+        },
+        "questionCount": {
+          "type": "number",
+          "description": "Jumlah butir soal"
+        },
+        "kkm": {
+          "type": "number",
+          "description": "KKM ujian"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "aktif", "selesai"],
+          "description": "Status siklus ujian"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan dokumen"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan terakhir"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "title",
+        "subjectCode",
+        "subjectName",
+        "examDate",
+        "durationMinutes",
+        "questionCount",
+        "kkm",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CbtSnapshot": {
+      "title": "CbtSnapshot",
+      "description": "Ringkasan statistik sinkronisasi data CBT ke Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID pengguna yang menyinkronkan data"
+        },
+        "schoolName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 150,
+          "description": "Nama sekolah"
+        },
+        "academicYear": {
+          "type": "string",
+          "pattern": "^[0-9]{4}/[0-9]{4}$",
+          "minLength": 9,
+          "maxLength": 9,
+          "description": "Tahun pelajaran"
+        },
+        "semester": {
+          "type": "string",
+          "enum": ["Ganjil", "Genap"],
+          "description": "Semester"
+        },
+        "totalSubjects": {
+          "type": "number",
+          "description": "Total mata pelajaran"
+        },
+        "totalClasses": {
+          "type": "number",
+          "description": "Total kelas"
+        },
+        "totalQuestions": {
+          "type": "number",
+          "description": "Total butir soal"
+        },
+        "totalExams": {
+          "type": "number",
+          "description": "Total jadwal ujian"
+        },
+        "totalStudents": {
+          "type": "number",
+          "description": "Total siswa aktif"
+        },
+        "totalTeachers": {
+          "type": "number",
+          "description": "Total guru aktif"
+        },
+        "syncedByName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Nama operator yang melakukan sinkronisasi"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan snapshot"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan snapshot"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "schoolName",
+        "academicYear",
+        "semester",
+        "totalSubjects",
+        "totalClasses",
+        "totalQuestions",
+        "totalExams",
+        "totalStudents",
+        "totalTeachers",
+        "syncedByName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CbtFullStoreChunk": {
+      "title": "CbtFullStoreChunk",
+      "description": "Potongan data penuh (full storage chunk) untuk setiap tabel SMART CBT yang disimpan ke Cloud Firestore.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID admin penyimpan data"
+        },
+        "tableName": {
+          "type": "string",
+          "enum": [
+            "system_settings",
+            "classes",
+            "subjects",
+            "users",
+            "questions",
+            "exams",
+            "exam_questions",
+            "exam_attempts",
+            "student_answers",
+            "violation_logs"
+          ],
+          "description": "Nama tabel sumber data CBT"
+        },
+        "chunkIndex": {
+          "type": "number",
+          "description": "Indeks chunk untuk tabel terkait"
+        },
+        "totalChunks": {
+          "type": "number",
+          "description": "Total chunk untuk tabel terkait"
+        },
+        "recordCount": {
+          "type": "number",
+          "description": "Jumlah baris data pada chunk ini"
+        },
+        "records": {
+          "type": "array",
+          "description": "Daftar objek baris data (maksimal 50 baris per chunk)"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan chunk"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan chunk"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "tableName",
+        "chunkIndex",
+        "totalChunks",
+        "recordCount",
+        "records",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CbtStoreMeta": {
+      "title": "CbtStoreMeta",
+      "description": "Metadata status model full penyimpanan Cloud Firestore SMART CBT.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID admin terakhir yang menyimpan penuh"
+        },
+        "storageMode": {
+          "type": "string",
+          "enum": ["full_cloud", "hybrid"],
+          "description": "Mode penyimpanan aktif"
+        },
+        "autoSync": {
+          "type": "boolean",
+          "description": "Status auto-simpan otomatis saat ada perubahan data"
+        },
+        "totalRecords": {
+          "type": "number",
+          "description": "Total seluruh baris data tersimpan"
+        },
+        "totalChunks": {
+          "type": "number",
+          "description": "Total dokumen chunk aktif"
+        },
+        "chunkIds": {
+          "type": "array",
+          "description": "Daftar ID dokumen chunk aktif pada koleksi cbt_full_store"
+        },
+        "syncedByName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120,
+          "description": "Nama operator yang terakhir menyimpan data"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu inisialisasi full storage"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu penyimpanan penuh terakhir"
+        }
+      },
+      "required": [
+        "ownerUid",
+        "storageMode",
+        "autoSync",
+        "totalRecords",
+        "totalChunks",
+        "chunkIds",
+        "syncedByName",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/school_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SchoolSettings" },
+      "description": "Dokumen konfigurasi utama sekolah (misal settingId='main')"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPublic" },
+      "description": "Profil publik non-PII pengguna"
+    },
+    "/users/{userId}/private/{docId}": {
+      "schema": { "$ref": "#/entities/UserPrivate" },
+      "description": "Data PII terisolasi milik pengguna"
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminGrant" },
+      "description": "Daftar UID administrator yang disetujui"
+    },
+    "/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/SubjectDoc" },
+      "description": "Daftar mata pelajaran tersinkronisasi"
+    },
+    "/classes/{classId}": {
+      "schema": { "$ref": "#/entities/ClassGroupDoc" },
+      "description": "Daftar kelas tersinkronisasi"
+    },
+    "/exams/{examId}": {
+      "schema": { "$ref": "#/entities/ExamDoc" },
+      "description": "Jadwal ujian tersinkronisasi"
+    },
+    "/cbt_snapshots/{snapshotId}": {
+      "schema": { "$ref": "#/entities/CbtSnapshot" },
+      "description": "Ringkasan statistik sinkronisasi Cloud Firestore"
+    },
+    "/cbt_full_store/{chunkId}": {
+      "schema": { "$ref": "#/entities/CbtFullStoreChunk" },
+      "description": "Penyimpanan penuh seluruh tabel CBT dalam bentuk chunk terstruktur"
+    },
+    "/cbt_store_meta/{metaId}": {
+      "schema": { "$ref": "#/entities/CbtStoreMeta" },
+      "description": "Metadata indeks chunk dan mode penyimpanan penuh"
+    }
+  }
+}
